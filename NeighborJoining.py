@@ -111,30 +111,15 @@ def updateTree(i, j, limbI, limbJ):
     arrGraph.insert(i, newCluster)
 
 def updateMatrix(data, iId, jId):
-    n = data.shape[0]
-    newData = np.zeros((n-1,n-1))
-
-    ii = jj = 1
-    for i in range(n):
-        if i == iId or i == jId:
-            continue
-        for j in range(n):
-            if j == iId or j == jId:
-                continue
-            newData[ii][jj] = data[i][j]
-            jj += 1
-        ii += 1
-        jj = 1
-            
-    ii = 1
-    for i in range (n):
-        if i == iId or i == jId:
-            continue
-        newData[0][ii] = (data[iId][i] + data[jId][i] - data[iId][jId]) / 2.
-        newData[ii][0] = (data[iId][i] + data[jId][i] - data[iId][jId]) / 2.
-        ii += 1
-
-    return newData
+    valueOfBothIndexes = data[iId][jId]
+    arr = data[:][jId]
+    arr = np.delete(arr, jId)
+    data = np.delete(data, jId, axis=0)
+    data = np.delete(data, jId, axis=1)
+    for i in range(len(data[0])):
+        data[i, iId] = data[iId, i] = (data[iId][i] + arr[i] - valueOfBothIndexes) / 2.
+    data[iId, iId] = 0.0
+    return data
 
 def updateFinalTree(data):
     G.add_edge(arrGraph[0], arrGraph[1], weight = data[0][1])
@@ -150,8 +135,8 @@ def neighborJoining(data):
         i, j = idmin(dataD)
         delta = countDelta(totalDistance, i, j)
         limbI, limbJ = countLimb(data[i][j], delta)
-        updateTree(i, j, limbI, limbJ) if i < j else updateTree(j, i, limbI, limbJ)
-        data = updateMatrix(data, i, j)
+        updateTree(i, j, limbI, limbJ) if i < j else updateTree(j, i, limbJ, limbI)
+        data = updateMatrix(data, i, j) if i < j else updateMatrix(data, j, i)
         showData(data)
     updateFinalTree(data)
 
@@ -159,7 +144,7 @@ if __name__=='__main__':
     showMatrixBool = True
     showDataBool = True
     #data = fromInput()
-    data = fromFile(fr"input\test7.txt")
+    data = fromFile(fr"input\test9.txt")
     neighborJoining(data)
     pos = nx.spring_layout(G, k=2.15, iterations=20)
     edge_labels=dict([((u,v,),d['weight'])
